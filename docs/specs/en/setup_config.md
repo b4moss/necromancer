@@ -130,7 +130,10 @@ Keypad bindings (1 → diary, etc.) are also defined here.
 ## Upload configuration (`upload.json`)
 
 Where to upload scan results is configured via `~/app/config/upload.json`.  
-Currently, only `provider: "nextcloud"` is supported.
+Supported `provider` values are **`nextcloud`** and **`cells`** (Pydio Cells).  
+Copy `~/app/config/upload.example.json` to `upload.json` and edit credentials (do not commit secrets).
+
+### Nextcloud
 
 ```json
 {
@@ -145,12 +148,36 @@ Currently, only `provider: "nextcloud"` is supported.
 }
 ```
 
-- **provider**: Slug for the cloud provider (currently only `"nextcloud"` is supported).
+- **provider**: `"nextcloud"`
 - **nextcloud**: Nextcloud-specific configuration:  
   - **endpoint**: WebDAV base URL (must end with `/`).  
   - **username / password**: Nextcloud credentials.  
   - **upload_folder**: Folder path on Nextcloud where files will be uploaded.  
   - **delete_after_upload**: Whether to delete local files/directories after a successful upload.
+
+### Pydio Cells
+
+```json
+{
+  "provider": "cells",
+  "cells": {
+    "endpoint": "https://your-cells-host/dav/<workspace-slug>/",
+    "username": "your_username",
+    "password": "your_password_or_pat",
+    "upload_folder": "Scans/",
+    "delete_after_upload": true
+  }
+}
+```
+
+- **provider**: `"cells"`
+- **cells**: Pydio Cells configuration (WebDAV `/dav/` + Basic auth):  
+  - **endpoint**: Workspace-scoped WebDAV base URL (e.g. `https://host/dav/personal-files/`). Must end with `/`.  
+  - **username / password**: Basic credentials. A PAT may be placed in `password`.  
+  - **upload_folder**: Destination folder path on Cells (relative).  
+  - **delete_after_upload**: Whether to delete local files/directories after a successful upload.
+
+Developer-facing current spec: [docs/dev/specs/pydio_cells.md](../pydio_cells.md).
 
 In the future, Dropbox or Google Drive support can be added by extending `upload.json` with another provider
 and adding a corresponding adapter, without changing the scanning logic.

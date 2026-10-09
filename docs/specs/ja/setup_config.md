@@ -130,7 +130,10 @@ Bus 001 Device 004: ID 04c5:132b FUJITSU LIMITED ScanSnap iX500
 ## アップロード設定（`upload.json`）
 
 スキャン結果をどのクラウドにアップロードするかは `~/app/config/upload.json` で設定します。  
-現時点では `provider: "nextcloud"` のみサポートしています。
+サポートする `provider` は **`nextcloud`** と **`cells`**（Pydio Cells）です。  
+例示は `~/app/config/upload.example.json` を `upload.json` にコピーして編集してください（秘密情報はコミットしない）。
+
+### Nextcloud
 
 ```json
 {
@@ -145,12 +148,36 @@ Bus 001 Device 004: ID 04c5:132b FUJITSU LIMITED ScanSnap iX500
 }
 ```
 
-- **provider**: 利用するクラウド種別をスラッグで指定します（現状 `\"nextcloud\"` のみ）。
+- **provider**: `"nextcloud"`
 - **nextcloud**: Nextcloud 用の詳細設定。  
   - **endpoint**: WebDAV のベース URL（必ず末尾に `/` を付ける）。  
   - **username / password**: Nextcloud の認証情報。  
   - **upload_folder**: Nextcloud 内でアップロード先とするフォルダパス。  
   - **delete_after_upload**: アップロード完了後にローカルファイル／ディレクトリを削除するかどうか。
+
+### Pydio Cells
+
+```json
+{
+  "provider": "cells",
+  "cells": {
+    "endpoint": "https://your-cells-host/dav/<workspace-slug>/",
+    "username": "your_username",
+    "password": "your_password_or_pat",
+    "upload_folder": "Scans/",
+    "delete_after_upload": true
+  }
+}
+```
+
+- **provider**: `"cells"`
+- **cells**: Pydio Cells 用の詳細設定（WebDAV `/dav/` + Basic 認証）。  
+  - **endpoint**: workspace 込みの WebDAV ベース URL（例: `https://host/dav/personal-files/`）。必ず末尾に `/` を付ける。  
+  - **username / password**: Basic 認証。PAT を使う場合は `password` に載せる。  
+  - **upload_folder**: Cells 上のアップロード先フォルダ（相対パス）。  
+  - **delete_after_upload**: アップロード完了後にローカルファイル／ディレクトリを削除するかどうか。
+
+開発者向けの現行仕様は [docs/dev/specs/pydio_cells.md](../pydio_cells.md) を参照してください。
 
 今後 Dropbox や Google Drive などに対応する場合も、`upload.json` の `provider` を切り替え、  
 各クラウド向けセクションを追加するだけで済む想定です。
