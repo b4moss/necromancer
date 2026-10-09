@@ -32,7 +32,7 @@ As a result, SANE was discovered, and the idea came up to drive the scanner from
 
 - Monitor input from a numeric keypad.
 - Execute different scan modes per number key (diary, receipt, flyer).
-- Automatically upload scanned documents to Nextcloud (via WebDAV).
+- Automatically upload scanned documents to Nextcloud or Pydio Cells (via WebDAV).
 - Start the keypad daemon automatically at system boot (systemd service).
 - Log scan activity to a log file.
 
