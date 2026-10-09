@@ -6,6 +6,12 @@
     "password": "your_password",
     "upload_folder": "Scans/",
     "delete_after_upload": true
+  },
+  "cells": {
+    "endpoint": "https://file.b4m.jp/dav/workspace-slug/",
+    "username": "your_username",
+    "password": "your_password_or_pat",
+    "upload_folder": "Scans/",
+    "delete_after_upload": true
   }
 }
-
