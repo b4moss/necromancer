@@ -19,8 +19,8 @@ sudo chown $USER:$USER /var/log/scanner
 3. Deploy application files
 
 ```bash
-git clone --branch v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
-# Until the tag exists: --branch dev-v0.3.0 or --branch main
+git clone --branch v0.4.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
+# Until the tag exists: --branch develop or --branch main
 mkdir -p ~/app
 cp -r ~/necromancer/app/* ~/app/
 mkdir -p ~/app/tmp

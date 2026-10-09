@@ -27,7 +27,7 @@ resolve_app_install() {
 APP_INSTALL="$(resolve_app_install)" || {
     echo "ERROR: app/install.sh not found." >&2
     echo "Clone the repository and run this script from the repository root:" >&2
-    echo "  git clone --branch v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer" >&2
+    echo "  git clone --branch v0.4.0 https://github.com/b4m-oss/necromancer.git ~/necromancer" >&2
     echo "  cd ~/necromancer && ./install.sh" >&2
     exit 1
 }

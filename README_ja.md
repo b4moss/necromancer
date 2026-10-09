@@ -43,17 +43,17 @@
 
 Raspberry Pi 上でリポジトリをクローンし、ルートのインストーラを実行します（内部で `app/install.sh` に委譲します）。
 
-**推奨**（リリースタグ `v0.3.0` 公開後）:
+**推奨**（リリースタグ `v0.4.0` 公開後）:
 
 ```bash
-git clone --branch v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
+git clone --branch v0.4.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
 cd ~/necromancer && ./install.sh
 ```
 
 タグがまだ無い場合は、開発ブランチを使ってください:
 
 ```bash
-git clone --branch dev-v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
+git clone --branch develop https://github.com/b4m-oss/necromancer.git ~/necromancer
 # または: --branch main
 cd ~/necromancer && ./install.sh
 ```
@@ -63,7 +63,7 @@ cd ~/necromancer && ./install.sh
 **任意**（クローン済みリポジトリのルートから。タグ付きスクリプトを優先）:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/b4m-oss/necromancer/v0.3.0/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/b4m-oss/necromancer/v0.4.0/install.sh | bash
 ```
 
 インストール後は `~/app/config/upload.example.json` を `~/app/config/upload.json` にコピーして認証情報を編集してください（秘密情報はコミットしないでください）。詳細は [セットアップと設定](./docs/ja/setup_config.md) を参照。
