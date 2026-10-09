@@ -1,6 +1,6 @@
 # Pydio Cells WebDAV ドライバー — テスト仕様
 
-関連 plans: [plan_pydio_cells.md](../plans/plan_pydio_cells.md) / Issue [#48](https://github.com/b4moss/necromancer/issues/48)
+関連仕様: [pydio_cells.md](../specs/pydio_cells.md)（現行） / Issue [#48](https://github.com/b4moss/necromancer/issues/48)
 
 `provider: "cells"` のとき、既存 Nextcloud と同契約で Cells WebDAV（`/dav/` + curl + Basic）へアップロードする。
 

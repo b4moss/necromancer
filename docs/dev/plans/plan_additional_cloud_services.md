@@ -3,6 +3,8 @@
 本ドキュメントは、b4m-necromancer に Nextcloud 以外のクラウドストレージ（Dropbox / Google Drive）を追加サポートする際の設計方針をまとめたものです。  
 現時点では **実装は行わず、方針レベルの仕様書** として扱います。
 
+**注:** Pydio Cells（`provider: "cells"`、WebDAV + Basic）は実装済み。現行仕様は [../specs/pydio_cells.md](../specs/pydio_cells.md)。本ファイルの対象外。
+
 ---
 
 ## 1. 全体方針
