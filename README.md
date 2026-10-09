@@ -32,7 +32,7 @@ As a result, SANE was discovered, and the idea came up to drive the scanner from
 
 - Monitor input from a numeric keypad.
 - Execute different scan modes per number key (diary, receipt, flyer).
-- Automatically upload scanned documents to Nextcloud (via WebDAV).
+- Automatically upload scanned documents to Nextcloud or Pydio Cells (via WebDAV).
 - Start the keypad daemon automatically at system boot (systemd service).
 - Log scan activity to a log file.
 
@@ -43,17 +43,17 @@ As a result, SANE was discovered, and the idea came up to drive the scanner from
 
 On a Raspberry Pi, clone the repo and run the root installer (delegates to `app/install.sh`).
 
-**Recommended** (after the `v0.3.0` release tag exists):
+**Recommended** (after the `v0.4.0` release tag exists):
 
 ```bash
-git clone --branch v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
+git clone --branch v0.4.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
 cd ~/necromancer && ./install.sh
 ```
 
 Until the tag is published, use a development branch instead:
 
 ```bash
-git clone --branch dev-v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
+git clone --branch develop https://github.com/b4m-oss/necromancer.git ~/necromancer
 # or: --branch main
 cd ~/necromancer && ./install.sh
 ```
@@ -63,7 +63,7 @@ You can also run `make install-pi` from the repository root (same as `./install.
 **Optional** (from a cloned repository root; prefers the tagged script):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/b4m-oss/necromancer/v0.3.0/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/b4m-oss/necromancer/v0.4.0/install.sh | bash
 ```
 
 After install, copy `~/app/config/upload.example.json` → `~/app/config/upload.json` and edit credentials (do not commit secrets). See [Setup and configuration](./docs/en/setup_config.md).

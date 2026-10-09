@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "b4m-necromancer"
-version = "0.2.0"
+version = "0.4.0"
 description = "Revive your old scanner with Raspberry Pi Zero 2"
 readme = "README.md"
 requires-python = ">=3.11"

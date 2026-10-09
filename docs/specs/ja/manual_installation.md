@@ -19,8 +19,8 @@ sudo chown $USER:$USER /var/log/scanner
 3. アプリケーションファイルを配置します
 
 ```bash
-git clone --branch v0.3.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
-# タグ未公開時: --branch dev-v0.3.0 または --branch main
+git clone --branch v0.4.0 https://github.com/b4m-oss/necromancer.git ~/necromancer
+# タグ未公開時: --branch develop または --branch main
 mkdir -p ~/app
 cp -r ~/necromancer/app/* ~/app/
 mkdir -p ~/app/tmp
