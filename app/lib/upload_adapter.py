@@ -8,6 +8,11 @@ try:
         upload_pdf_to_nextcloud,
         upload_file_to_nextcloud,
     )
+    from .cells import (
+        upload_directory_to_cells,
+        upload_pdf_to_cells,
+        upload_file_to_cells,
+    )
 except ImportError:
     _app_root = Path(__file__).resolve().parent.parent
     if str(_app_root) not in sys.path:
@@ -16,6 +21,11 @@ except ImportError:
         upload_directory_to_nextcloud,
         upload_pdf_to_nextcloud,
         upload_file_to_nextcloud,
+    )
+    from lib.cells import (
+        upload_directory_to_cells,
+        upload_pdf_to_cells,
+        upload_file_to_cells,
     )
 
 
@@ -35,12 +45,28 @@ class NextcloudUploader:
         return upload_pdf_to_nextcloud(pdf_path)
 
 
+class CellsUploader:
+    """
+    Upload adapter for Pydio Cells (WebDAV).
+    """
+
+    def upload_directory(self, dir_path: str) -> bool:
+        return upload_directory_to_cells(dir_path)
+
+    def upload_file(self, file_path: str) -> bool:
+        return upload_file_to_cells(file_path)
+
+    def upload_pdf(self, pdf_path: str) -> bool:
+        return upload_pdf_to_cells(pdf_path)
+
+
 def _load_upload_config_raw(config_path: str = str(Path(__file__).resolve().parent.parent / "config" / "upload.json")):
     """
     Helper to load raw data from upload.json.
     {
-      "provider": "nextcloud",
-      "nextcloud": { ... }
+      "provider": "nextcloud" | "cells",
+      "nextcloud": { ... },
+      "cells": { ... }
     }
     """
     with open(config_path, "r", encoding="utf-8") as f:
@@ -50,16 +76,16 @@ def _load_upload_config_raw(config_path: str = str(Path(__file__).resolve().pare
 def get_uploader_from_config():
     """
     Return an appropriate upload adapter based on upload.json.
-    Currently only provider='nextcloud' is supported.
+    Supported: provider='nextcloud' | 'cells'.
     """
     raw = _load_upload_config_raw()
     provider = raw.get("provider", "nextcloud")
 
     if provider == "nextcloud":
         return NextcloudUploader()
+    if provider == "cells":
+        return CellsUploader()
 
     # Future extension point: dropbox / gdrive etc.
     print(f"Warning: unsupported provider specified: {provider}. Falling back to Nextcloud.")
     return NextcloudUploader()
-
-
