@@ -3,8 +3,6 @@ import os
 import subprocess
 from pathlib import Path
 
-# MKCOL success: created, or already-exists equivalents observed on WebDAV / Cells.
-_MKCOL_SUCCESS_STATUSES = {201, 405, 409}
 
 
 def load_cells_config(config_path: str = str(Path(__file__).resolve().parent.parent / "config" / "upload.json")):
@@ -45,23 +43,14 @@ def test_cells_connection() -> bool:
             print("Cells endpoint is not configured.")
             return False
 
-        curl_cmd = (
-            f"curl -i -I "
-            f"-u '{config['username']}:{config['password']}' "
-            f"-k '{endpoint}'"
-        )
-        safe_cmd = curl_cmd.replace(
-            f"{config['username']}:{config['password']}",
-            "USERNAME:PASSWORD",
-        )
-        print(f"Testing Cells connectivity with command: {safe_cmd}")
+        curl_cmd = [
+            "curl", "-sS", "-i", "-I",
+            "-u", f"{config['username']}:{config['password']}",
+            "-k", endpoint,
+        ]
+        print(f"Testing Cells connectivity: curl -sS -i -I -u 'USERNAME:PASSWORD' -k '{endpoint}'")
 
-        result = subprocess.run(
-            curl_cmd,
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(curl_cmd, capture_output=True, text=True)
 
         print("\n===== Cells connectivity check output =====")
         print("stdout:")
@@ -100,69 +89,85 @@ def test_cells_connection() -> bool:
         return False
 
 
+def _mkcol_one(endpoint: str, username: str, password: str, remote_dir: str) -> int | None:
+    """
+    Issue a single WebDAV MKCOL for remote_dir (relative to endpoint).
+    Returns HTTP status code, or None if unparseable.
+    """
+    remote_url = f"{endpoint}{remote_dir.rstrip('/')}/"
+    # Avoid -v: curl verbose mode prints Authorization headers into logs.
+    curl_cmd = [
+        "curl", "-sS", "-i",
+        "-X", "MKCOL",
+        "-u", f"{username}:{password}",
+        "-k", remote_url,
+    ]
+    print(f"Create remote directory: MKCOL {remote_url}")
+    result = subprocess.run(curl_cmd, capture_output=True, text=True)
+    print("\n===== MKCOL output =====")
+    print("stdout:")
+    print(result.stdout)
+    if result.stderr:
+        print("\nstderr:")
+        print(result.stderr)
+    print("===== end of output =====\n")
+
+    response_lines = result.stdout.strip().split("\n")
+    status_line = next((line for line in response_lines if line.startswith("HTTP/")), None)
+    if not status_line:
+        print("Could not find HTTP status line for MKCOL")
+        return None
+    print(f"MKCOL response: {status_line}")
+    parts = status_line.split()
+    if len(parts) < 2:
+        return None
+    try:
+        return int(parts[1])
+    except ValueError:
+        return None
+
+
 def create_remote_directory(remote_dir: str) -> bool:
     """
-    Create a directory on Cells via WebDAV MKCOL.
-    Treats already-exists responses as success (201 / 405 / 409; adjust if Cells differs).
+    Create a directory on Cells via WebDAV MKCOL, including missing parents.
+    Cells returns 409 (not 405) when a parent is missing; treating that as
+    success caused PUT 404. Create each path segment from the root.
+    Treats already-exists responses as success (201 / 405; 409 only after parents exist).
     """
     try:
         config = load_cells_config()
+        endpoint = config["endpoint"]
+        if not endpoint.endswith("/"):
+            endpoint += "/"
 
-        remote_url = f"{config['endpoint']}{remote_dir.rstrip('/')}/"
-
-        curl_cmd = (
-            f"curl -v -i "
-            f"-X MKCOL "
-            f"-u '{config['username']}:{config['password']}' "
-            f"-k '{remote_url}'"
-        )
-
-        safe_cmd = curl_cmd.replace(
-            f"{config['username']}:{config['password']}",
-            "USERNAME:PASSWORD",
-        )
-        print(f"Create remote directory command: {safe_cmd}")
-
-        result = subprocess.run(curl_cmd, shell=True, capture_output=True, text=True)
-
-        print("\n===== MKCOL output =====")
-        print("stdout:")
-        print(result.stdout)
-        print("\nstderr:")
-        print(result.stderr)
-        print("===== end of output =====\n")
-
-        response_lines = result.stdout.strip().split("\n")
-        status_line = next((line for line in response_lines if line.startswith("HTTP/")), None)
-
-        if not status_line:
-            print("Could not find HTTP status line for MKCOL")
-            return False
-
-        print(f"MKCOL response: {status_line}")
-        parts = status_line.split()
-        if len(parts) < 2:
-            print(f"Invalid MKCOL status line: {status_line}")
-            return False
-
-        try:
-            status_code = int(parts[1])
-        except ValueError:
-            print(f"Failed to parse MKCOL status code: {status_line}")
-            return False
-
-        if status_code == 201:
-            print(f"Successfully created remote directory: {remote_dir}")
-            return True
-        if status_code in _MKCOL_SUCCESS_STATUSES:
-            print(
-                f"Remote directory already exists or accepted "
-                f"(status={status_code}, treated as success): {remote_dir}"
-            )
+        # Build cumulative segments: "Scans/2026.../" -> ["Scans", "Scans/2026..."]
+        parts = [p for p in remote_dir.strip("/").split("/") if p]
+        if not parts:
+            print("Empty remote_dir; nothing to create")
             return True
 
-        print(f"MKCOL failed (status code: {status_code})")
-        return False
+        cumulative = []
+        for part in parts:
+            cumulative.append(part)
+            rel = "/".join(cumulative)
+            status_code = _mkcol_one(endpoint, config["username"], config["password"], rel)
+            if status_code is None:
+                return False
+            if status_code == 201:
+                print(f"Successfully created remote directory: {rel}/")
+                continue
+            if status_code in (405, 409):
+                # 405 Method Not Allowed / 409 Conflict often means exists.
+                # After parents are created, 409 for the leaf usually means exists.
+                print(
+                    f"Remote directory already exists or accepted "
+                    f"(status={status_code}): {rel}/"
+                )
+                continue
+            print(f"MKCOL failed for {rel}/ (status code: {status_code})")
+            return False
+
+        return True
 
     except Exception as e:
         print(f"Error while creating remote directory: {e}")
@@ -191,21 +196,17 @@ def upload_file_to_cells(file_path: str, remote_path: str = None):
         print(f"- remote URL: {remote_url}")
         print(f"- remote folder: {config['upload_folder']}")
 
-        curl_cmd = (
-            f"curl -v -i "
-            f"-X PUT "
-            f"-u '{config['username']}:{config['password']}' "
-            f"--upload-file '{file_path}' "
-            f"-k '{remote_url}'"
-        )
+        # Avoid -v: curl verbose mode prints Authorization headers into logs.
+        curl_cmd = [
+            "curl", "-sS", "-i",
+            "-X", "PUT",
+            "-u", f"{config['username']}:{config['password']}",
+            "--upload-file", file_path,
+            "-k", remote_url,
+        ]
+        print(f"Executing: curl -sS -i -X PUT -u 'USERNAME:PASSWORD' --upload-file '{file_path}' -k '{remote_url}'")
 
-        safe_cmd = curl_cmd.replace(
-            f"{config['username']}:{config['password']}",
-            "USERNAME:PASSWORD",
-        )
-        print(f"Executing command: {safe_cmd}")
-
-        result = subprocess.run(curl_cmd, shell=True, capture_output=True, text=True)
+        result = subprocess.run(curl_cmd, capture_output=True, text=True)
 
         print("\n===== CURL output =====")
         print("stdout:")
