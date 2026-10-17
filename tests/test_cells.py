@@ -53,6 +53,7 @@ def test_load_cells_config_missing_section(tmp_path):
     ("", False),
 ])
 def test_create_remote_directory_status_codes(monkeypatch, status_stdout, expected):
+    """Single-segment path: one MKCOL; status mapping unchanged for leaf."""
     cfg = {
         "endpoint": "https://file.b4m.jp/dav/workspace/",
         "username": "user",
@@ -71,7 +72,66 @@ def test_create_remote_directory_status_codes(monkeypatch, status_stdout, expect
         lambda *a, **k: DummyResult(status_stdout),
     )
 
-    assert cells.create_remote_directory("Scans/dir/") is expected
+    assert cells.create_remote_directory("Scans/") is expected
+
+
+def test_create_remote_directory_creates_parents_first(monkeypatch):
+    """Nested path must MKCOL each segment (parent before child)."""
+    cfg = {
+        "endpoint": "https://file.b4m.jp/dav/workspace/",
+        "username": "user",
+        "password": "pass",
+    }
+    calls = []
+
+    class DummyResult:
+        def __init__(self, stdout):
+            self.stdout = stdout
+            self.stderr = ""
+
+    def fake_run(cmd, **kwargs):
+        # cmd is a list: ... remote_url
+        url = cmd[-1]
+        calls.append(url)
+        return DummyResult("HTTP/1.1 201 Created\n")
+
+    monkeypatch.setattr(cells, "load_cells_config", lambda: cfg)
+    monkeypatch.setattr(cells.subprocess, "run", fake_run)
+
+    assert cells.create_remote_directory("Scans/20261015110135/") is True
+    assert len(calls) == 2
+    assert calls[0].endswith("/Scans/")
+    assert calls[1].endswith("/Scans/20261015110135/")
+
+
+def test_create_remote_directory_parent_missing_then_child_ok(monkeypatch):
+    """
+    Regression: Cells returns 409 when parent is missing.
+    Creating parents first means leaf MKCOL can return 201.
+    """
+    cfg = {
+        "endpoint": "https://file.b4m.jp/dav/workspace/",
+        "username": "user",
+        "password": "pass",
+    }
+    responses = [
+        "HTTP/1.1 201 Created\n",  # Scans/
+        "HTTP/1.1 201 Created\n",  # Scans/ts/
+    ]
+
+    class DummyResult:
+        def __init__(self, stdout):
+            self.stdout = stdout
+            self.stderr = ""
+
+    def fake_run(cmd, **kwargs):
+        return DummyResult(responses.pop(0))
+
+    monkeypatch.setattr(cells, "load_cells_config", lambda: cfg)
+    monkeypatch.setattr(cells.subprocess, "run", fake_run)
+
+    assert cells.create_remote_directory("Scans/ts/") is True
+    assert responses == []
 
 
 def test_upload_file_to_cells_success(monkeypatch, tmp_path):
